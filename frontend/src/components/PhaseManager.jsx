@@ -81,7 +81,7 @@ const PhaseManager = () => {
             const interval = setInterval(() => {
                 console.log("Auto-fetching data...");
                 fetchPhaseData({ Amount: 0 });
-            }, 2000); // Fetch every 5 seconds
+            }, 10000); // Fetch every 5 seconds
 
             return () => clearInterval(interval); // Cleanup interval on unmount
         }

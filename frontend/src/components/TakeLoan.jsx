@@ -129,11 +129,12 @@ const styles = {
           style={styles.slider}
         />
         <div style={styles.text}>
-          <p style={styles.amountText}>
-            Interes diario $ {(sliderValue * 0.9 / 7).toFixed(2)}
-          </p>
+          
           <p style={styles.amountText}>
             Cantidad $ {sliderValue}
+          </p>
+          <p style={styles.amountText}>
+            Interes diario $ {(sliderValue * 0.9 / 7).toFixed(2)}
           </p>
         </div>
 

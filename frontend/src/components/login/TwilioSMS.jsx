@@ -6,8 +6,9 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
   const [smsCode, setSmsCode] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isResendDisabled, setIsResendDisabled] = useState(false); // State to disable the resend button
-  const [resendTimer, setResendTimer] = useState(0); // Timer for resend cooldown
+  const [isResendDisabled, setIsResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [isLoading, setIsLoading] = useState(false); // New state for loader
 
   const handlePhoneNumberChange = (e) => {
     setPhoneNumber(e.target.value);
@@ -18,21 +19,23 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
   };
 
   const validatePhoneNumber = (phone) => {
-    const phoneRegex = /^\+\d{10,15}$/; // E.164 format
+    const phoneRegex = /^\+\d{10,15}$/;
     return phoneRegex.test(phone);
   };
 
   const validateSmsCode = (code) => {
-    const codeRegex = /^\d{6}$/; // Exactly 6 digits
+    const codeRegex = /^\d{6}$/;
     return codeRegex.test(code);
   };
 
   const handleSendSms = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setIsLoading(true); // Start loader
 
     if (!validatePhoneNumber(`+52${phone}`)) {
       setErrorMessage('El número de teléfono no es válido.');
+      setIsLoading(false); // Stop loader
       return;
     }
 
@@ -42,22 +45,26 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
       });
       if (response.status === 200) {
         setCurrentStep(1);
-        startResendCooldown(); // Start the cooldown timer
+        startResendCooldown();
       } else {
         onError('No se pudo enviar el SMS. Inténtalo de nuevo.');
       }
     } catch (error) {
       console.error('Error sending SMS:', error);
       onError('No se pudo enviar el SMS. Inténtalo de nuevo.');
+    } finally {
+      setIsLoading(false); // Stop loader
     }
   };
 
   const handleVerifySms = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setIsLoading(true); // Start loader
 
     if (!validateSmsCode(smsCode)) {
       setErrorMessage('El código SMS debe tener exactamente 6 dígitos.');
+      setIsLoading(false); // Stop loader
       return;
     }
 
@@ -96,6 +103,8 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
     } catch (error) {
       console.error('Error verifying SMS:', error);
       onError('El código SMS no es válido. Inténtalo de nuevo.');
+    } finally {
+      setIsLoading(false); // Stop loader
     }
   };
 
@@ -112,7 +121,7 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
         Phone: `+52${phone}`,
       });
       if (response.status === 200) {
-        startResendCooldown(); // Restart the cooldown timer
+        startResendCooldown();
       } else {
         onError('No se pudo reenviar el SMS. Inténtalo de nuevo.');
       }
@@ -124,7 +133,7 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
 
   const startResendCooldown = () => {
     setIsResendDisabled(true);
-    let timer = 30; // Cooldown time in seconds
+    let timer = 30;
     setResendTimer(timer);
 
     const interval = setInterval(() => {
@@ -138,65 +147,68 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
     }, 1000);
   };
 
-const styles = {
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: '1em',
-    borderRadius: '8px',
-    boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-    width: '90%', // Flexible width for smaller screens
-    maxWidth: '350px', // Max width for larger screens
-    minWidth: '250px', // Min width to prevent being too small
-    boxSizing: 'border-box',
-    margin: '0px auto', // Center the form on the screen
-  },
-  input: {
-    display: 'flex',
-    textAlign: 'center',
-    width: '100%', // Full width input
-    padding: '10px',
-    marginBottom: '20px',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-    boxSizing: 'border-box',
-  },
-  button: {
-    width: '100%', // Full width button
-    padding: '10px',
-    borderRadius: '4px',
-    border: 'none',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    fontSize: '1em',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-  },
-  resendButton: {
-    marginTop: '10px',
-    width: '100%', // Full width resend button
-    padding: '10px',
-    borderRadius: '4px',
-    border: 'none',
-    backgroundColor: isResendDisabled ? '#ccc' : '#007bff',
-    color: '#fff',
-    fontSize: '1em',
-    cursor: isResendDisabled ? 'not-allowed' : 'pointer',
-    boxSizing: 'border-box',
-  },
-  error: {
-    color: 'red',
-    marginBottom: '20px',
-  },
-  heading: {
-    margin: '0 0 20px 0',
-    fontSize: '1rem',
-  },
-};
-
-
+  const styles = {
+    form: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      backgroundColor: '#fff',
+      padding: '1em',
+      borderRadius: '8px',
+      boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+      width: '90%',
+      maxWidth: '350px',
+      minWidth: '250px',
+      boxSizing: 'border-box',
+      margin: '0px auto',
+    },
+    input: {
+      display: 'flex',
+      textAlign: 'center',
+      width: '100%',
+      padding: '10px',
+      marginBottom: '20px',
+      borderRadius: '4px',
+      border: '1px solid #ccc',
+      boxSizing: 'border-box',
+    },
+    button: {
+      width: '100%',
+      padding: '10px',
+      borderRadius: '4px',
+      border: 'none',
+      backgroundColor: '#007bff',
+      color: '#fff',
+      fontSize: '1em',
+      cursor: 'pointer',
+      boxSizing: 'border-box',
+    },
+    resendButton: {
+      marginTop: '10px',
+      width: '100%',
+      padding: '10px',
+      borderRadius: '4px',
+      border: 'none',
+      backgroundColor: isResendDisabled ? '#ccc' : '#007bff',
+      color: '#fff',
+      fontSize: '1em',
+      cursor: isResendDisabled ? 'not-allowed' : 'pointer',
+      boxSizing: 'border-box',
+    },
+    error: {
+      color: 'red',
+      marginBottom: '20px',
+    },
+    heading: {
+      margin: '0 0 20px 0',
+      fontSize: '1rem',
+    },
+    loader: {
+      margin: '20px 0',
+      fontSize: '1rem',
+      color: '#007bff',
+    },
+  };
 
   return (
     <>
@@ -212,7 +224,9 @@ const styles = {
             style={styles.input}
             aria-label="Teléfono"
           />
-          <button type="submit" style={styles.button}>Enviar SMS</button>
+          <button type="submit" style={styles.button} disabled={isLoading}>
+            {isLoading ? 'Enviando...' : 'Enviar SMS'}
+          </button>
         </form>
       )}
       {currentStep === 1 && (
@@ -227,7 +241,9 @@ const styles = {
             style={styles.input}
             aria-label="Código SMS"
           />
-          <button type="submit" style={styles.button}>Verificar SMS</button>
+          <button type="submit" style={styles.button} disabled={isLoading}>
+            {isLoading ? 'Verificando...' : 'Verificar SMS'}
+          </button>
           <button
             type="button"
             style={styles.resendButton}
